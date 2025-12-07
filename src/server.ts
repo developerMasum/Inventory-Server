@@ -1,11 +1,13 @@
-import { Server } from "http";
-import app from "./app";
+import { Server } from "http"
+import app from "./app"
 
-const port = 5000;
+const port = 5000
 
 function main() {
-  const server: Server = app.listen(port, () => {
-    console.log(`Inventory Management App app is listening on port ${port}`);
-  });
+  const server:Server = app.listen(port, () => {
+    console.log(` app is listening on port ${port}`)
+  })
+  
 }
-main();
+main()
+

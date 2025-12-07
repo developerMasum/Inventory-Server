@@ -4,9 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// Use Decimal for currency to avoid floating point problems.
 enum PaymentMethod {
   CASH
   CARD
@@ -32,13 +32,13 @@ model Product {
 }
 
 model Category {
-  id       String    @id @default(uuid())
+  id       String    @id @unique
   name     String    @unique
   products Product[]
 }
 
 model Supplier {
-  id        String    @id @default(uuid())
+  id        String    @id @unique
   name      String
   phone     String?
   email     String?

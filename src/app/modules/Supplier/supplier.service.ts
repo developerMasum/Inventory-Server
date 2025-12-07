@@ -1,14 +1,41 @@
 import { Prisma, Supplier } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 
-// Create a new supplier
+const generateSupCode = async (): Promise<string> => {
+  // Get all supplier IDs that start with "sup-"
+  const suppliers = await prisma.supplier.findMany({
+    select: { id: true },
+  });
+
+  const numbers = suppliers
+    .map((s) => {
+      const parts = s.id.split("-");
+      if (parts[0] === "sup" && !isNaN(Number(parts[1]))) {
+        return Number(parts[1]);
+      }
+      return 0;
+    })
+    .sort((a, b) => b - a);
+
+  const nextNumber = (numbers[0] ? numbers[0] + 1 : 1)
+    .toString()
+    .padStart(3, "0");
+  return `sup-${nextNumber}`;
+};
+
 const createSupplier = async (
   data: Prisma.SupplierCreateInput
 ): Promise<Supplier> => {
-  return await prisma.supplier.create({ data });
+  const supId = await generateSupCode();
+
+  return await prisma.supplier.create({
+    data: {
+      ...data,
+      id: supId,
+    },
+  });
 };
 
-// Get all suppliers
 const getAllSuppliers = async (): Promise<Supplier[]> => {
   return await prisma.supplier.findMany();
 };

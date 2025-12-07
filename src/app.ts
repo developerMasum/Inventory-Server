@@ -1,50 +1,54 @@
+import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
-import express, { Application, NextFunction, Request, Response } from "express";
-import httpStatus from "http-status";
-import globalErrorHandler from "./app/middlewares/globalErrorHandler";
-import routes from "./app/routes";
+
 import cookieParser from "cookie-parser";
+import router from "./app/routes";
+// import globalErrorHandler from "./app/modules/Error/globalErrorHandler";
+import httpStatus from "http-status";
 
 const app: Application = express();
+app.use(cookieParser());
 
+// PARSER
+// app.use(cors());
+
+// origin: "http://localhost:3000",
+
+// const corsOptions = {
+//   origin: "https://cycle-wave.vercel.app",
+//   credentials: true,
+// };
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
 app.use(
-  cors({
-    origin: ["http://localhost:3000"],
-    credentials: true,
+  express.urlencoded({
+    extended: true,
   })
 );
 
-app.use(cookieParser());
-
-//parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use("/api", routes);
-// app.use("/");
-
-app.get("/test", async (req: Request, res: Response) => {
-  res.status(200).json({
-    message: "Server working....!",
+app.get("/", (req: Request, res: Response) => {
+  res.send({
+    message: "welcome to Inventory Management System!",
   });
 });
 
-//global error handler
-app.use(globalErrorHandler);
+app.use("/api", router);
 
-//handle not found
+// app.use(globalErrorHandler);
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.status(httpStatus.NOT_FOUND).json({
     success: false,
-    message: "Not Found",
-    errorMessages: [
-      {
-        path: req.originalUrl,
-        message: "API Not Found",
-      },
-    ],
+    message: "API NOT FOUND!",
+    error: {
+      path: req.originalUrl,
+      message: "Your requested path is not found!",
+    },
   });
-  next();
 });
 
 export default app;
