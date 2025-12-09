@@ -19,6 +19,10 @@ enum UserRole {
   STAFF
 }
 
+// SUPERADMIN 
+// ADMIN
+// STAFF
+
 model User {
   id        String   @id @default(uuid())
   name      String?
