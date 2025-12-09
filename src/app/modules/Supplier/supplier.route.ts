@@ -6,7 +6,6 @@ const router = Router();
 // Create a new supplier
 router.post("/", supplierController.createSupplierController);
 
-// Get all suppliers
 router.get("/", supplierController.getAllSuppliersController);
 
 // Get a supplier by ID

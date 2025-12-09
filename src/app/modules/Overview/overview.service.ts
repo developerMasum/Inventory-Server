@@ -7,7 +7,7 @@ const LowStockAlert = async () => {
   const products = await prisma.product.findMany({
     where: {
       stock: {
-        lte: 10, // products with low stock
+        lte: 10,
       },
     },
     orderBy: {
@@ -20,7 +20,7 @@ const LowStockAlert = async () => {
     id: product.id,
     name: product.name,
     stock: product.stock,
-    restockQuantity: DESIRED_STOCK - product.stock, // how many units to restock
+    restockQuantity: DESIRED_STOCK - product.stock,
   }));
 
   return restockInfo;
