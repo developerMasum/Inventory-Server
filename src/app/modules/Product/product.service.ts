@@ -4,114 +4,122 @@ import { productSearchableFields } from "./product.utils";
 const createProduct = async (data: any) => {
   return await prisma.product.create({ data });
 };
-// const getAllProductsFromDB = async (query: Record<string, unknown>) => {
-//   const allowedSortFields = ["price", "name", "createdAt"];
-//   let sortBy = (query.sort as string) || "-createdAt";
+const getAllProductsFromDB = async (query: Record<string, unknown>) => {
+  const allowedSortFields = ["price", "name", "createdAt"];
+  let sortBy = (query.sort as string) || "-createdAt";
 
-//   // Fix sort
-//   let orderByField = "createdAt";
-//   let order: "asc" | "desc" = "desc";
-//   if (sortBy.startsWith("-")) {
-//     const field = sortBy.slice(1);
-//     if (allowedSortFields.includes(field)) {
-//       orderByField = field;
-//       order = "desc";
-//     }
-//   } else {
-//     if (allowedSortFields.includes(sortBy)) {
-//       orderByField = sortBy;
-//       order = "asc";
-//     }
-//   }
+  // Sort handler
+  let orderByField = "createdAt";
+  let order: "asc" | "desc" = "desc";
 
-//   const orderBy = {
-//     [orderByField]: order,
-//   } as Prisma.ProductOrderByWithRelationInput;
+  if (sortBy.startsWith("-")) {
+    const field = sortBy.slice(1);
+    if (allowedSortFields.includes(field)) {
+      orderByField = field;
+      order = "desc";
+    }
+  } else {
+    if (allowedSortFields.includes(sortBy)) {
+      orderByField = sortBy;
+      order = "asc";
+    }
+  }
 
-//   // Price range
-//   const priceRange = query.priceRange as string;
-//   const priceFilter: Record<string, number> = {};
-//   if (priceRange) {
-//     const [min, max] = priceRange.split("-").map(Number);
-//     if (!isNaN(min)) priceFilter.gte = min;
-//     if (!isNaN(max)) priceFilter.lte = max;
-//   }
+  const orderBy = {
+    [orderByField]: order,
+  } as Prisma.ProductOrderByWithRelationInput;
 
-//   const page = Number(query.page) || 1;
-//   const limit = Number(query.limit) || 10;
-//   const skip = (page - 1) * limit;
+  // Price range filter
+  const priceRange = query.priceRange as string;
+  const priceFilter: Record<string, number> = {};
+  if (priceRange) {
+    const [min, max] = priceRange.split("-").map(Number);
+    if (!isNaN(min)) priceFilter.gte = min;
+    if (!isNaN(max)) priceFilter.lte = max;
+  }
 
-//   const filterFields = ["sort", "priceRange", "page", "limit", "searchTerm"];
-//   const rawFilters: Record<string, unknown> = {};
-//   for (const key in query) {
-//     if (!filterFields.includes(key)) {
-//       rawFilters[key] = query[key];
-//     }
-//   }
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
 
-//   const where: Prisma.ProductWhereInput = {
-//     ...rawFilters,
-//   };
+  const filterFields = ["sort", "priceRange", "page", "limit", "searchTerm"];
+  const rawFilters: Record<string, unknown> = {};
 
-//   if (Object.keys(priceFilter).length) {
-//     where.price = priceFilter;
-//   }
+  for (const key in query) {
+    if (!filterFields.includes(key)) {
+      rawFilters[key] = query[key];
+    }
+  }
 
-//   const searchTerm = query.searchTerm as string;
-//   if (searchTerm) {
-//     where.OR = productSearchableFields.map((field) => ({
-//       [field]: {
-//         contains: searchTerm,
-//         mode: "insensitive",
-//       },
-//     }));
-//   }
+  const where: Prisma.ProductWhereInput = {
+    ...rawFilters,
+  };
 
-//   const [products, total] = await Promise.all([
-//     prisma.product.findMany({
-//       where,
-//       skip,
-//       take: limit,
-//       orderBy,
-//     }),
-//     prisma.product.count({ where }),
-//   ]);
+  // Apply price range on purchasePrice
+  if (Object.keys(priceFilter).length) {
+    where.purchasePrice = priceFilter;
+  }
 
-//   return {
-//     meta: {
-//       page,
-//       limit,
-//       total,
-//     },
-//     result: products,
-//   };
-// };
-// const getProductById = async (id: string) => {
-//   return await prisma.product.findUniqueOrThrow({
-//     where: {
-//       id,
-//     },
-//   });
-// };
-// const deleteProduct = async (id: string) => {
-//   return await prisma.product.delete({
-//     where: {
-//       id,
-//     },
-//   });
-// };
-// const updateProduct = async (id: string, data: any) => {
-//   return await prisma.product.update({
-//     where: {
-//       id,
-//     },
-//     data,
-//   });
-// };
+  // Search filter
+  const searchTerm = query.searchTerm as string;
+  if (searchTerm) {
+    where.OR = [
+      { name: { contains: searchTerm, mode: "insensitive" } },
+      { sku: { contains: searchTerm, mode: "insensitive" } },
+      { imageUrl: { contains: searchTerm, mode: "insensitive" } },
+    ];
+  }
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: {
+        category: true,
+        supplier: true,
+      },
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    result: products,
+  };
+};
+
+const getProductById = async (id: string) => {
+  return await prisma.product.findUniqueOrThrow({
+    where: {
+      id,
+    },
+  });
+};
+const deleteProduct = async (id: string) => {
+  return await prisma.product.delete({
+    where: {
+      id,
+    },
+  });
+};
+const updateProduct = async (id: string, data: any) => {
+  return await prisma.product.update({
+    where: {
+      id,
+    },
+    data,
+  });
+};
 export const productsService = {
-  //   getAllProductsFromDB,
-  //   getProductById,
+  getAllProductsFromDB,
+  getProductById,
   createProduct,
-  //   deleteProduct,
-  //   updateProduct,
+  deleteProduct,
+  updateProduct,
 };

@@ -15,63 +15,63 @@ const createProductController = async (req: Request, res: Response) => {
     data: result,
   });
 };
-// const getAllProductsHandler = catchAsync(async (req, res) => {
-//   const filters = pick(req.query, productFilterableFields);
-//   const options = pick(req.query, ["limit", "page", "sort", "priceRange"]); // note: use 'sort' not 'sortBy'
-//   const query = { ...filters, ...options };
+const getAllProductsHandler = catchAsync(async (req, res) => {
+  const filters = pick(req.query, productFilterableFields);
+  const options = pick(req.query, ["limit", "page", "sort", "priceRange"]); // note: use 'sort' not 'sortBy'
+  const query = { ...filters, ...options };
 
-//   const result = await productsService.getAllProductsFromDB(query);
+  const result = await productsService.getAllProductsFromDB(query);
 
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Products retrieved successfully",
-//     meta: result.meta,
-//     data: result.result,
-//   });
-// });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Products retrieved successfully",
+    meta: result.meta,
+    data: result.result,
+  });
+});
 
-// const getProductByIdHandler = async (req: Request, res: Response) => {
-//   try {
-//     const product = await productsService.getProductById(req.params.id);
-//     res.status(200).json({
-//       success: true,
-//       message: "Product data retrieved successfully!",
-//       data: product,
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error!",
-//       error: err,
-//     });
-//   }
-// };
-// const deleteProduct = catchAsync(async (req, res) => {
-//   const result = await productsService.deleteProduct(req.params.id);
+const getProductByIdHandler = async (req: Request, res: Response) => {
+  try {
+    const product = await productsService.getProductById(req.params.id);
+    res.status(200).json({
+      success: true,
+      message: "Product data retrieved successfully!",
+      data: product,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      error: err,
+    });
+  }
+};
+const deleteProduct = catchAsync(async (req, res) => {
+  const result = await productsService.deleteProduct(req.params.id);
 
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Product is deleted successfully",
-//     data: result,
-//   });
-// });
-// const updateProduct = catchAsync(async (req, res) => {
-//   const result = await productsService.updateProduct(req.params.id, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Product is deleted successfully",
+    data: result,
+  });
+});
+const updateProduct = catchAsync(async (req, res) => {
+  const result = await productsService.updateProduct(req.params.id, req.body);
 
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Product is updated successfully",
-//     data: result,
-//   });
-// });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Product is updated successfully",
+    data: result,
+  });
+});
 
 export const productsController = {
-  //   getProductByIdHandler,
-  //   getAllProductsHandler,
   createProductController,
-  //   deleteProduct,
-  //   updateProduct,
+  getAllProductsHandler,
+  getProductByIdHandler,
+  deleteProduct,
+  updateProduct,
 };
