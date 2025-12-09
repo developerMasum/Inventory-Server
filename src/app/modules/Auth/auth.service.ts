@@ -133,10 +133,19 @@ const changePassword = async (token: any, payload: any) => {
     message: "password changed Successfully",
   };
 };
+const deleteUser = async (userId: string) => {
+  const deletedUser = await prisma.user.delete({
+    where: {
+      id: userId,
+    },
+  });
+  return deletedUser;
+};
 
 export const AuthServices = {
   registerUser,
   loginUser,
   refreshToken,
   changePassword,
+  deleteUser,
 };
