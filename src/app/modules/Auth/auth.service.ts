@@ -1,0 +1,142 @@
+import prisma from "../../../shared/prisma";
+import * as bcrypt from "bcrypt";
+import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+import { jwtHelpers } from "../../../Helpers/jwtHelpers";
+import config from "../../../config";
+
+const registerUser = async (payload: {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}) => {
+  const hashedPassword: string = await bcrypt.hash(payload.password, 12);
+
+  const newUser = await prisma.user.create({
+    data: {
+      name: payload.name,
+      email: payload.email,
+      password: hashedPassword,
+      // role: payload.role,
+    },
+  });
+  return newUser;
+};
+
+const loginUser = async (payload: { email: string; password: string }) => {
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: payload.email,
+    },
+  });
+  console.log(userData);
+
+  const isCorrectPassword: boolean = await bcrypt.compare(
+    payload.password,
+    userData.password
+  );
+
+  if (!isCorrectPassword) {
+    throw new Error("Password incorrect!");
+  }
+  const accessToken = jwtHelpers.generateToken(
+    {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.generateToken(
+    {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+    },
+    config.jwt.refresh_token_secret as Secret,
+    config.jwt.refresh_token_expires_in as string
+  );
+
+  return {
+    refreshToken,
+    id: userData?.id,
+    name: userData?.name,
+    email: userData?.email,
+    role: userData?.role,
+
+    accessToken,
+  };
+};
+
+const refreshToken = async (token: string) => {
+  let decodedData;
+  try {
+    decodedData = jwtHelpers.verifyToken(
+      token,
+      config.jwt.refresh_token_secret as Secret
+    );
+  } catch (err) {
+    throw new Error("You are not authorized!");
+  }
+
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: decodedData.email,
+    },
+  });
+
+  const accessToken = jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+      id: userData.id,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  return {
+    accessToken,
+  };
+};
+
+const changePassword = async (token: any, payload: any) => {
+  const user = jwtHelpers.verifyToken(token, config.jwt.jwt_secret as Secret);
+
+  const userData = await prisma.user.findFirstOrThrow({
+    where: {
+      email: user.email,
+    },
+  });
+  const isCorrectPassword = await bcrypt.compare(
+    payload.oldPassword,
+    userData.password
+  );
+  if (!isCorrectPassword) {
+    throw new Error("Password is  Wrong");
+  }
+
+  const hashedPassword: string = await bcrypt.hash(payload.newPassword, 12);
+  await prisma.user.update({
+    where: {
+      email: userData.email,
+    },
+    data: {
+      password: hashedPassword,
+    },
+  });
+  return {
+    message: "password changed Successfully",
+  };
+};
+
+export const AuthServices = {
+  registerUser,
+  loginUser,
+  refreshToken,
+  changePassword,
+};

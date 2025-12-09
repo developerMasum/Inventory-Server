@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { Secret } from "jsonwebtoken";
 
 import httpStatus from "http-status";
-import { jwtHelpers } from "../../Helpers/jwtHealpers";
+import { jwtHelpers } from "../../Helpers/jwtHelpers";
 import ApiError from "../../errors/ApiError";
 import config from "../../config";
 
