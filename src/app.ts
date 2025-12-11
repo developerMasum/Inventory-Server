@@ -19,7 +19,7 @@ app.use(cookieParser());
 //   credentials: true,
 // };
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "https://hardware-store-client.vercel.app",
   credentials: true,
 };
 
